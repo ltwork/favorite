@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .all ol li.current {
+            background: yellow;
+        }
+
+        #arr {
+            display: none;
+        }
+
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="all" id='box'>
+    <div class="screen">
+        <ul>
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <ol>
+            <!-- 动态创建的小方块，添加在这里，样式已经给写好了-->
+        </ol>
+    </div>
+    <div id="arr">
+        <span id="left">&lt;</span>
+        <span id="right">&gt;</span>
+    </div>
+</div>
+</body>
+</html>
+<script src="../animate.js"></script>
+<script>
+    //1.获取对应的元素
+    var box = document.getElementById("box");
+    var screen = box.children[0];
+    //console.log(screen);
+    var ul = screen.children[0];//得到ul
+    //console.log(ul);
+    var liList = ul.children;//得到所有的li标签
+    //console.log(liList);
+    var ol = screen.children[1];//得到ol
+    //console.log(ol);
+    var arr =  box.children[1];//得到装左右箭头的盒子
+    //console.log(arr);
+    var leftSpan = document.getElementById("left");
+    var rightSpan = document.getElementById("right");
+
+    var timeID;
+
+    //2.获得每次位移的固定宽度
+    var moveWidth = screen.offsetWidth;
+
+    //3.动态创建数字按钮  根据有几个li
+    for(var i = 0;i < liList.length;i++){
+        var newLi = document.createElement("li");
+        newLi.innerHTML = i + 1 ;
+        ol.appendChild(newLi);
+    }
+    //4.修改第一个默认颜色
+    ol.children[0].setAttribute("class","current");
+
+    //5.遍历所有的数字下标,算 移动距离
+    var numList = ol.children;
+    for(var i = 0;i < numList.length;i++){
+        //5.1 给每个数字下标添加索引
+        numList[i].setAttribute("numIndex",i);
+        numList[i].onclick = function () {
+            for(var j = 0;j < numList.length;j++){//颜色排他
+                numList[j].removeAttribute("class");
+            }
+            this.setAttribute("class","current");//点击时 颜色变化
+            var target = -this.getAttribute("numIndex") * moveWidth;//计算ul移动距离
+            animate(ul,target);
+            picIndex = liIndex = this.getAttribute("numIndex");
+        };
+    }
+
+    //6.设置鼠标移入 移出 显示焦点
+    box.onmouseover = function () {
+        arr.style.display = "block";
+        clearInterval(timeID);
+    };
+    box.onmouseout = function () {
+        arr.style.display = "none";
+        timeID = setInterval(rightClick,2000);
+    };
+
+    //7.设置右焦点点击事件
+    ul.appendChild(liList[0].cloneNode(true));//追击一个 深度克隆 的 li的第一个元素到ul的最后面
+    //8.申明一个变量来存储 焦点 点击次数
+    var picIndex = 0;//记录点击次数
+    var liIndex = 0;//记录数字下标的变化
+    rightSpan. onclick = function () {
+        rightClick();
+    };
+    function rightClick() {
+            if(picIndex == 5){//如果点击5下就显示我克隆的那以张
+                picIndex = 0 ;//就让用户看到没移动时的图片
+                ul.style.left = "0px";//就是让ul离盒子的距离为0
+            }
+            picIndex++;
+            //console.log(picIndex);
+            var target = -picIndex *moveWidth;
+            animate(ul,target);
+            //颜色排他
+            for (var j = 0; j < numList.length; j++) {//颜色排他
+                numList[j].removeAttribute("class");
+            }
+            liIndex++;//数字下标和图片的关系
+            if(liIndex == 5){
+                liIndex = 0;
+            }
+            console.log(liIndex);
+            numList[liIndex].setAttribute("class","current");
+    };
+    leftSpan. onclick = function () {
+        if(picIndex == 0){//如果点击5下就显示我克隆的那以张
+            picIndex = 5 ;//就让用户看到没移动时的图片
+            ul.style.left = - picIndex * moveWidth+"px";//就是让ul离盒子的距离为0
+        }
+        picIndex--;
+        //console.log(picIndex);
+        var target = -picIndex *moveWidth;
+        animate(ul,target);
+        //颜色排他
+        for (var j = 0; j < numList.length; j++) {//颜色排他
+            numList[j].removeAttribute("class");
+        }
+        liIndex--;//数字下标和图片的关系
+        if(liIndex <0){
+            liIndex = 4;
+        }
+        console.log(liIndex);
+        numList[liIndex].setAttribute("class","current");
+    }
+    //设置定时器
+    timeID = setInterval(rightClick,2000);
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+

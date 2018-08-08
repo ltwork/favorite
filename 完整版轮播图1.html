@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .all ol li.current {
+            background: yellow;
+        }
+
+        #arr {
+            display: none;
+        }
+
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="all" id='box'>
+    <div class="screen">
+        <ul>
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <ol>
+            <!-- 动态创建的小方块，添加在这里，样式已经给写好了-->
+        </ol>
+    </div>
+    <div id="arr">
+        <span id="left">&lt;</span>
+        <span id="right">&gt;</span>
+    </div>
+</div>
+</body>
+</html>
+<script src="../animate.js"></script>
+<script>
+    //1.获取对应的元素
+    var box = document.getElementById("box");
+    var screen = box.children[0];//位移的宽度盒子
+    var ul = screen.children[0];//位移的ul
+    var liLists = ul.children;//ul中有多少图片
+    var ol = screen.children[1];//新建的数字按钮的父元素
+    var arr = document.getElementById("arr");
+    var leftSpan = document.getElementById("left");//左焦点
+    var rightSpan = document.getElementById("right");//右焦点
+    var timeID;
+
+
+    //2.获得每次位移的固定宽度
+    var moveWidth = screen.offsetWidth;
+    console.log(moveWidth);
+
+
+    //3.动态创建数字按钮
+    for(var i = 0;i < liLists.length;i++){
+         var newLi = document.createElement("li");
+         newLi.innerHTML = i + 1;
+         ol.appendChild(newLi);
+    }
+
+    //3.1第一个数字按钮,默认有背景颜色
+    var numLists = ol.children;
+    numLists[0].setAttribute("class","current");
+
+    //4.给数字按钮设置点击事件
+    for(var j = 0;j < numLists.length;j++){
+         //4.1设置索引值
+        numLists[j].setAttribute("numIndex",j);
+        //4.2设置单击事件
+        numLists[j].onclick = function () {
+            //4.3颜色排他
+            for(var i = 0; i < numLists.length;i++){
+                 numLists[i].removeAttribute("class");
+            }
+            //4.4设置颜色
+            this.setAttribute("class","current");
+
+            //5.计算位移距离
+            var target = -this.getAttribute("numIndex") * moveWidth;
+
+            //5.1调用动画
+            animate(ul,target);
+
+            //12.点击的时候保证所有的索引都要同步
+            picIndex = liIndex = this.getAttribute("numIndex");
+        }
+    }
+
+    //6.鼠标移入与移出事件
+    box.onmouseover = function () {
+        arr.style.display = "block";
+        //鼠标移入的时候,清空自动轮播
+        clearInterval(timeID);
+    };
+    box.onmouseout = function () {
+        arr.style.display = "none";
+        timeID = setInterval(rightClick,2000);
+        //鼠标移出的时候,重新设置计时器
+    };
+
+    //8.克隆第一张图片的替身
+    ul.appendChild(liLists[0].cloneNode(true));
+
+    //7.1声明一个变量,来记录焦点按钮点击的次数
+    var picIndex = 0;
+
+    //9.1声明一个变量索引可以用来修改对应的数字按钮状态
+    var liIndex = 0;
+
+    //7.设置右边焦点按钮的点击事件
+    rightSpan.onclick = function () {
+        rightClick();
+    };
+
+    //封装右焦点的点击函数
+    function rightClick() {
+        //8.1如果说picIndex已经等于5了,那么就代表一组图片已经出去了,你现在看到的应该是替身,需要立刻改变位移为0px
+        if(picIndex == 5){
+            picIndex = 0;
+            //如果picIndex等于5,那么应该重新开始--0
+            ul.style.left = "0px";
+            //将显示的替身图片瞬移成真正的第一张
+        }
+        picIndex++;
+        //console.log(picIndex);
+        //7.2计算位移的距离
+        var target = -picIndex * moveWidth;
+        //7.3调用动画函数
+        animate(ul,target);
+
+        //9.因为焦点按钮的picIndex最大值是5,但是数字按钮的numIndex只有4,所有没法完全对应上
+        //颜色排他
+        for(var j = 0;j < numLists.length;j++){
+            numLists[j].removeAttribute("class");
+        }
+
+        liIndex++;
+        if(liIndex == 5){
+            //如果这个liIndex是5的时候,那么现在显示的应该是第一张,那就要把它修改成为0
+            liIndex = 0;
+        }
+        console.log(liIndex);
+        numLists[liIndex].setAttribute("class","current");
+        //这里是难点
+    }
+
+    //10.设置左边的焦点按钮的单击事件
+    leftSpan.onclick = function () {
+        if(picIndex == 0){
+            picIndex = 5;
+            ul.style.left = -picIndex * moveWidth +"px";
+            //让图片显示瞬间回到克隆那一张
+        }
+
+        picIndex--;
+        //计算位移的距离
+        var target = -picIndex * moveWidth;
+        //调用动画函数
+        animate(ul,target);
+
+        //颜色排他
+        for(var j = 0;j < numLists.length;j++){
+            numLists[j].removeAttribute("class");
+        }
+
+        liIndex--;
+        if(liIndex < 0){
+            //如果这个liIndex是5的时候,那么现在显示的应该是第一张,那就要把它修改成为0
+            liIndex = 4;
+        }
+        console.log(liIndex);
+        numLists[liIndex].setAttribute("class","current");
+        //这里是难点
+    };
+
+    //11.设置定时器,每隔一段时间就调用右焦点按钮的函数
+    timeID = setInterval(rightClick,2000);
+</script>
+
+
+
+
+
+
+
+
+
+
+
